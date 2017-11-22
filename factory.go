@@ -9,23 +9,28 @@ import (
 type GameCommander struct {
 	tcpClient      *TcpClient
 	enableCommands []string
+	configStatus   bool
 }
 
 func startGameCommander() GameCommander {
-	tcpClient := buildTcpClient()
-	tcpClient.Connect()
+	// tcpClient = buildTcpClient("")
+	// tcpClient.Connect()
 
-	go startEmitter(tcpClient.message)
+	// go startEmitter(tcpClient.message)
 
 	return GameCommander{
-		tcpClient: tcpClient,
+		configStatus: false,
 		enableCommands: []string{
-			"game", "chat", "login", "connect",
+			"game", "chat", "login",
 		},
 	}
 }
 
 func (factory *GameCommander) CreateCommand(input string) Command {
+	if !factory.configStatus {
+		return factory.CreateConnectCommand()
+	}
+
 	for _, comm := range factory.enableCommands {
 		if strings.HasPrefix(input, comm) {
 			switch input {
@@ -51,15 +56,22 @@ func (factory *GameCommander) CreateLoginCommand() Command {
 	}
 }
 func (factory *GameCommander) CreateConnectCommand() Command {
-	return nil
+	return &ConnectCommand{
+		commander: factory,
+	}
 }
 func (factory *GameCommander) CreateGeneralCommand() Command {
 	return &GeneralCommand{}
 }
+func (factory *GameCommander) installClient(tcpClient *TcpClient) {
+	factory.tcpClient = tcpClient
+	factory.configStatus = true
+	go onHandleMessage(tcpClient.message)
+}
 
-func startEmitter(messageEmitter chan []byte) {
+func onHandleMessage(messageChan chan []byte) {
 	for {
-		message := <-messageEmitter
+		message := <-messageChan
 		logger.Info(string(message))
 	}
 }

@@ -13,6 +13,8 @@ import (
 const writeWait = 10 * time.Second
 
 type TcpClient struct {
+	hostname      string
+	port          string
 	username      string
 	uid           string
 	connection    net.Conn
@@ -36,7 +38,8 @@ func (tcpClient *TcpClient) Connect() {
 	}
 
 	var tcpAddr *net.TCPAddr
-	tcpAddr, resolveErr := net.ResolveTCPAddr("tcp", "127.0.0.1:50000")
+	var remoteAddr = fmt.Sprintf("%s:%s", tcpClient.hostname, tcpClient.port)
+	tcpAddr, resolveErr := net.ResolveTCPAddr("tcp", remoteAddr)
 
 	if resolveErr != nil {
 		logger.Error("can't find remote peer!")
@@ -51,7 +54,7 @@ func (tcpClient *TcpClient) Connect() {
 	logger.Success("connected!")
 
 	go onCloseConnect(tcpClient)
-	go onMessageRecived(tcpClient)
+	go onMessageReceived(tcpClient)
 
 	tcpClient.connectStatus = true
 }
@@ -71,7 +74,7 @@ func onCloseConnect(tcpClient *TcpClient) {
 	}
 }
 
-func onMessageRecived(tcpClient *TcpClient) {
+func onMessageReceived(tcpClient *TcpClient) {
 	defer func() {
 		tcpClient.quitSemaphore <- true
 	}()
@@ -81,7 +84,7 @@ func onMessageRecived(tcpClient *TcpClient) {
 		buffer := make([]byte, 2048)
 		length, err := reader.Read(buffer) //.ReadString('\n')
 		msg := buffer[0:length]
-		fmt.Println(msg)
+		// fmt.Println(msg)
 		if err != nil {
 			tcpClient.quitSemaphore <- true
 			break
@@ -89,6 +92,13 @@ func onMessageRecived(tcpClient *TcpClient) {
 
 		tcpClient.message <- msg
 	}
+}
+
+func (tcpClient *TcpClient) SendBytes(message []byte) {
+	tcpClient.Connect()
+
+	tcpClient.connection.SetWriteDeadline(time.Now().Add(writeWait))
+	tcpClient.connection.Write(message)
 }
 
 func (tcpClient *TcpClient) SendMessage(message interface{}) {
@@ -101,8 +111,10 @@ func (tcpClient *TcpClient) SendMessage(message interface{}) {
 	tcpClient.connection.Write(responseStr)
 }
 
-func buildTcpClient() *TcpClient {
+func buildTcpClient(hostname string, port string) *TcpClient {
 	return &TcpClient{
+		hostname:      hostname,
+		port:          port,
 		connection:    nil,
 		connectStatus: false,
 		loginStatus:   false,
