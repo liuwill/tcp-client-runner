@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"net"
-	"tcp-client-runner/utils"
 	"tcp-client-runner/utils/crypto"
 	"tcp-client-runner/utils/logger"
 	"time"
@@ -34,6 +33,15 @@ func (tcpClient *TcpClient) IsLogin() bool {
 }
 func (tcpClient *TcpClient) Login(loginStatus bool) {
 	tcpClient.loginStatus = loginStatus
+}
+func (tcpClient *TcpClient) SetUid(uid string) {
+	tcpClient.uid = uid
+}
+func (tcpClient *TcpClient) SetUsername(username string) {
+	tcpClient.username = username
+}
+func (tcpClient *TcpClient) SetProtocol(protocol string) {
+	tcpClient.protocol = protocol
 }
 func (tcpClient *TcpClient) Connect() {
 	if tcpClient.connectStatus {
@@ -122,7 +130,6 @@ func buildTcpClient(hostname string, port string) *TcpClient {
 		connectStatus: false,
 		loginStatus:   false,
 		protocol:      "json",
-		uid:           utils.GenerateObjectId(),
 		message:       make(chan []byte),
 		quitSemaphore: make(chan bool),
 	}

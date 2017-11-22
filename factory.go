@@ -13,11 +13,6 @@ type GameCommander struct {
 }
 
 func startGameCommander() GameCommander {
-	// tcpClient = buildTcpClient("")
-	// tcpClient.Connect()
-
-	// go startEmitter(tcpClient.message)
-
 	return GameCommander{
 		configStatus: false,
 		enableCommands: []string{
@@ -27,7 +22,7 @@ func startGameCommander() GameCommander {
 }
 
 func (factory *GameCommander) CreateCommand(input string) Command {
-	if !factory.configStatus {
+	if !factory.configStatus || !factory.tcpClient.IsConnect() {
 		return factory.CreateConnectCommand()
 	}
 

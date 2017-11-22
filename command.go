@@ -3,6 +3,7 @@ package runner
 import (
 	"encoding/json"
 	"fmt"
+	"tcp-client-runner/utils"
 	"tcp-client-runner/utils/crypto"
 	"tcp-client-runner/utils/logger"
 )
@@ -17,8 +18,9 @@ func (command *ChatCommand) Execute(data map[string]string) {
 		return
 	}
 
-	fmt.Println("Say something with other players, Enjoy!")
+	fmt.Println("Say something to other players, Enjoy!")
 	content := ReadLine("Enter Message", "")
+
 	if len(content) <= 0 {
 		return
 	}
@@ -61,13 +63,15 @@ func (command *LoginCommand) Execute(data map[string]string) {
 	username := ReadLine("Enter Username", "visitor")
 	gameId := ReadLine("Enter Game Id", "")
 	protocol := ReadLine("Enter Protocol", "json")
+	uid := utils.GenerateObjectId()
 
 	if len(gameId) == 0 {
 		logger.Warning("You need point the game you want")
 		return
 	}
-	command.tcpClient.username = username
-	command.tcpClient.protocol = protocol
+	command.tcpClient.SetUid(uid)
+	command.tcpClient.SetUsername(username)
+	command.tcpClient.SetProtocol(protocol)
 
 	coder, _ := crypto.GenerateCoder("json")
 	responseStr, _ := coder.Encode(map[string]interface{}{

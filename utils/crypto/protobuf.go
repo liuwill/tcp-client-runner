@@ -2,9 +2,8 @@ package crypto
 
 import (
 	"encoding/json"
+	"game-backend-server/resource"
 	"log"
-
-	"tcp-client-runner/resource"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -12,24 +11,26 @@ import (
 type ProtobufCoder struct{}
 
 func (coder *ProtobufCoder) Decode(ciphertext []byte, target interface{}) error {
-	requestData := &resource.RequestModule{}
-	err := proto.Unmarshal(ciphertext, requestData)
+	responseData := &resource.ResponseModule{}
+	err := proto.Unmarshal(ciphertext, responseData)
 	if err != nil {
 		log.Fatal("unmarshaling error: ", err)
 		return err
 	}
 	messageBody := map[string]interface{}{}
 
-	if len(requestData.Body) > 0 {
-		innerErr := json.Unmarshal([]byte(requestData.Body), &messageBody)
+	if len(responseData.Data) > 0 {
+		innerErr := json.Unmarshal([]byte(responseData.Data), &messageBody)
 		if innerErr != nil {
 			return innerErr
 		}
 	}
 
 	targetData := map[string]interface{}{
-		"type": requestData.Type,
-		"body": messageBody,
+		"type":   responseData.Type,
+		"status": responseData.Status,
+		"msg":    responseData.Msg,
+		"data":   messageBody,
 	}
 	targetByte, _ := json.Marshal(targetData)
 	json.Unmarshal(targetByte, target)
@@ -40,23 +41,16 @@ func (coder *ProtobufCoder) Decode(ciphertext []byte, target interface{}) error 
 func (coder *ProtobufCoder) Encode(content interface{}) ([]byte, error) {
 	responseContent, _ := content.(map[string]interface{})
 
-	data, _ := responseContent["data"]
+	body, _ := responseContent["body"]
 
-	dataContent, _ := json.Marshal(data)
+	bodyContent, _ := json.Marshal(body)
 
-	rawStatus, _ := responseContent["status"]
 	rawType, _ := responseContent["type"]
-	rawMsg, _ := responseContent["msg"]
-
-	rStatus, _ := rawStatus.(int)
 	rType, _ := rawType.(string)
-	rMsg, _ := rawMsg.(string)
 
-	newResponse := &resource.ResponseModule{
-		Type:   rType,
-		Data:   string(dataContent),
-		Status: int32(rStatus),
-		Msg:    rMsg,
+	newResponse := &resource.RequestModule{
+		Type: rType,
+		Body: string(bodyContent),
 	}
 
 	return proto.Marshal(newResponse)
