@@ -36,6 +36,8 @@ func (factory *GameCommander) CreateCommand(input string) Command {
 			switch input {
 			case "login":
 				return factory.CreateLoginCommand()
+			case "chat":
+				return factory.CreateChatCommand()
 			}
 		}
 
@@ -45,7 +47,9 @@ func (factory *GameCommander) CreateCommand(input string) Command {
 }
 
 func (factory *GameCommander) CreateChatCommand() Command {
-	return nil
+	return &ChatCommand{
+		tcpClient: factory.tcpClient,
+	}
 }
 func (factory *GameCommander) CreateGameCommand() Command {
 	return nil

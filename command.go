@@ -10,6 +10,31 @@ import (
 type ChatCommand struct {
 	tcpClient *TcpClient
 }
+
+func (command *ChatCommand) Execute(data map[string]string) {
+	if !command.tcpClient.IsLogin() {
+		logger.Warning("You are not login now!")
+		return
+	}
+
+	fmt.Println("Say something with other players, Enjoy!")
+	content := ReadLine("Enter Message", "")
+	if len(content) <= 0 {
+		return
+	}
+
+	command.tcpClient.SendMessage(map[string]interface{}{
+		"type": "chat",
+		"body": map[string]string{
+			"msg": content,
+		},
+	})
+}
+
+func (command *ChatCommand) Fields() []string {
+	return []string{}
+}
+
 type GeneralCommand struct{}
 
 func (command *GeneralCommand) Execute(data map[string]string) {
@@ -57,6 +82,8 @@ func (command *LoginCommand) Execute(data map[string]string) {
 	})
 	command.tcpClient.SendBytes(responseStr)
 	logger.Warning(username + ":" + protocol)
+
+	command.tcpClient.Login(true)
 	// bytes, _ := json.Marshal(data)
 	// logger.Info(string(bytes))
 }

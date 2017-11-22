@@ -10,10 +10,12 @@ const (
 	color_green
 	color_yellow
 	color_blue
+	color_purple
 	log_erro    = "[ERRO]"
 	log_success = "[SUCCESS]"
 	log_warning = "[WARNING]"
 	log_info    = "[INFO]"
+	log_system  = "[SYSTEM]"
 )
 
 func print(color uint8, tip string, format string, a ...interface{}) {
@@ -36,4 +38,8 @@ func Warning(format string, a ...interface{}) {
 
 func Info(format string, a ...interface{}) {
 	print(color_blue, log_info, format, a...)
+}
+
+func System(format string, a ...interface{}) {
+	print(color_purple, log_system, format, a...)
 }

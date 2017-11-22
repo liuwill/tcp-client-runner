@@ -32,6 +32,9 @@ func (tcpClient *TcpClient) IsConnect() bool {
 func (tcpClient *TcpClient) IsLogin() bool {
 	return tcpClient.loginStatus
 }
+func (tcpClient *TcpClient) Login(loginStatus bool) {
+	tcpClient.loginStatus = loginStatus
+}
 func (tcpClient *TcpClient) Connect() {
 	if tcpClient.connectStatus {
 		return
