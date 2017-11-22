@@ -1,0 +1,14 @@
+syntax = "proto3";
+package resource;
+
+message RequestModule {
+    string type=1;
+    string body=2;
+};
+
+message ResponseModule {
+    string type=1;
+    string data=2;
+    int32 status=3;
+    string msg=4;
+};
