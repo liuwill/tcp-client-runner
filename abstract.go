@@ -10,6 +10,7 @@ type CommandFactory interface {
 	CreateLoginCommand() Command
 	CreateChatCommand() Command
 	CreateGameCommand() Command
+	CreateHelpCommand() Command
 	CreateConnectCommand() Command
 	CreateGeneralCommand() Command
 }

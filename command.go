@@ -8,6 +8,7 @@ import (
 	"tcp-client-runner/utils/logger"
 )
 
+// Chat Command For send chat message
 type ChatCommand struct {
 	tcpClient *TcpClient
 }
@@ -37,6 +38,7 @@ func (command *ChatCommand) Fields() []string {
 	return []string{}
 }
 
+// General Command For general purples
 type GeneralCommand struct{}
 
 func (command *GeneralCommand) Execute(data map[string]string) {
@@ -49,6 +51,7 @@ func (command *GeneralCommand) Fields() []string {
 	}
 }
 
+// Login Command For user login
 type LoginCommand struct {
 	tcpClient *TcpClient
 }
@@ -88,13 +91,12 @@ func (command *LoginCommand) Execute(data map[string]string) {
 	logger.Warning(username + ":" + protocol)
 
 	command.tcpClient.Login(true)
-	// bytes, _ := json.Marshal(data)
-	// logger.Info(string(bytes))
 }
 func (command *LoginCommand) Fields() []string {
 	return []string{}
 }
 
+// Connect Command For Connect with Tcp Server
 type ConnectCommand struct {
 	commander *GameCommander
 }
@@ -110,5 +112,26 @@ func (command *ConnectCommand) Execute(data map[string]string) {
 	tcpClient.Connect()
 }
 func (command *ConnectCommand) Fields() []string {
+	return []string{}
+}
+
+type HelpCommand struct{}
+
+func (command *HelpCommand) Execute(data map[string]string) {
+	fmt.Println("This is a simple TCP client as long live chat app")
+	fmt.Println("============  All Command Support Not  ============")
+	fmt.Println()
+	fmt.Println("Connet with server is necessary")
+	fmt.Println()
+
+	fmt.Println("Commands:")
+	fmt.Println("  login:    login a game by id")
+	fmt.Println("  chat:     send message to peers")
+	fmt.Println("  .exit:    quit")
+	fmt.Println()
+	fmt.Println("More application will be added.")
+}
+
+func (command *HelpCommand) Fields() []string {
 	return []string{}
 }

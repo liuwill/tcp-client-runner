@@ -33,6 +33,7 @@ func main() {
 		if cmdStr == ".exit" {
 			return
 		} else if len(cmdStr) == 0 {
+			fmt.Println("Enter 'help' for more info!")
 			continue
 		}
 		// fmt.Printf(input)

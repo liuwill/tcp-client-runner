@@ -16,12 +16,16 @@ func StartGameCommander() GameCommander {
 	return GameCommander{
 		configStatus: false,
 		enableCommands: []string{
-			"game", "chat", "login",
+			"game", "chat", "login", "help",
 		},
 	}
 }
 
 func (factory *GameCommander) CreateCommand(input string) Command {
+	if input == "help" {
+		return factory.CreateHelpCommand()
+	}
+
 	if !factory.configStatus || !factory.tcpClient.IsConnect() {
 		return factory.CreateConnectCommand()
 	}
@@ -58,6 +62,9 @@ func (factory *GameCommander) CreateConnectCommand() Command {
 	return &ConnectCommand{
 		commander: factory,
 	}
+}
+func (factory *GameCommander) CreateHelpCommand() Command {
+	return &HelpCommand{}
 }
 func (factory *GameCommander) CreateGeneralCommand() Command {
 	return &GeneralCommand{}
