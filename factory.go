@@ -12,7 +12,7 @@ type GameCommander struct {
 	configStatus   bool
 }
 
-func startGameCommander() GameCommander {
+func StartGameCommander() GameCommander {
 	return GameCommander{
 		configStatus: false,
 		enableCommands: []string{

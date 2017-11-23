@@ -2,8 +2,10 @@ package runner
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"net"
+	"tcp-client-runner/utils/codec"
 	"tcp-client-runner/utils/crypto"
 	"tcp-client-runner/utils/logger"
 	"time"
@@ -18,6 +20,7 @@ type TcpClient struct {
 	uid           string
 	connection    net.Conn
 	protocol      string
+	tempProtocol  string
 	connectStatus bool
 	loginStatus   bool
 
@@ -42,6 +45,9 @@ func (tcpClient *TcpClient) SetUsername(username string) {
 }
 func (tcpClient *TcpClient) SetProtocol(protocol string) {
 	tcpClient.protocol = protocol
+}
+func (tcpClient *TcpClient) SetTempProtocol(protocol string) {
+	tcpClient.tempProtocol = protocol
 }
 func (tcpClient *TcpClient) Connect() {
 	if tcpClient.connectStatus {
@@ -91,9 +97,16 @@ func onMessageReceived(tcpClient *TcpClient) {
 	}()
 
 	reader := bufio.NewReader(tcpClient.connection)
+	buffer := make([]byte, 2048)
 	for {
-		buffer := make([]byte, 2048)
-		length, err := reader.Read(buffer) //.ReadString('\n')
+		targetBytes, err := codec.Unpack(reader)
+
+		for i, v := range targetBytes {
+			buffer[i] = v
+		}
+
+		length := len(targetBytes)
+		// length, err := reader.Read(buffer) //.ReaString('\n')
 		msg := buffer[0:length]
 		// fmt.Println(msg)
 		if err != nil {
@@ -101,7 +114,28 @@ func onMessageReceived(tcpClient *TcpClient) {
 			break
 		}
 
-		tcpClient.message <- msg
+		if tcpClient.protocol == "protobuf" {
+			var rawData interface{}
+
+			coder, _ := crypto.GenerateCoder(tcpClient.protocol)
+			_ = coder.Decode(msg, &rawData)
+			targetMsg, _ := json.Marshal(rawData)
+			tcpClient.message <- targetMsg
+		} else {
+			var rawData interface{}
+			coder, _ := crypto.GenerateCoder("json")
+			_ = coder.Decode(msg, &rawData)
+
+			baseData, _ := rawData.(map[string]interface{})
+			rawType, _ := baseData["type"]
+			baseType, _ := rawType.(string)
+
+			if baseType == "join" {
+				tcpClient.SetProtocol(tcpClient.tempProtocol)
+			}
+
+			tcpClient.message <- msg
+		}
 	}
 }
 
@@ -109,7 +143,12 @@ func (tcpClient *TcpClient) SendBytes(message []byte) {
 	tcpClient.Connect()
 
 	tcpClient.connection.SetWriteDeadline(time.Now().Add(writeWait))
-	tcpClient.connection.Write(message)
+
+	targetBytes, err := codec.Pack(message)
+	if err != nil {
+		return
+	}
+	tcpClient.connection.Write(targetBytes)
 }
 
 func (tcpClient *TcpClient) SendMessage(message interface{}) {
@@ -119,7 +158,11 @@ func (tcpClient *TcpClient) SendMessage(message interface{}) {
 	responseStr, _ := coder.Encode(message)
 
 	tcpClient.connection.SetWriteDeadline(time.Now().Add(writeWait))
-	tcpClient.connection.Write(responseStr)
+	targetBytes, err := codec.Pack(responseStr)
+	if err != nil {
+		return
+	}
+	tcpClient.connection.Write(targetBytes)
 }
 
 func buildTcpClient(hostname string, port string) *TcpClient {

@@ -71,7 +71,7 @@ func (command *LoginCommand) Execute(data map[string]string) {
 	}
 	command.tcpClient.SetUid(uid)
 	command.tcpClient.SetUsername(username)
-	command.tcpClient.SetProtocol(protocol)
+	command.tcpClient.SetTempProtocol(protocol)
 
 	coder, _ := crypto.GenerateCoder("json")
 	responseStr, _ := coder.Encode(map[string]interface{}{
