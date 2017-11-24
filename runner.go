@@ -21,7 +21,7 @@ type CommandRunner struct {
 func CreateRunner() CommandRunner {
 	gameCommander := StartGameCommander()
 	return CommandRunner{
-		clientCtrl: &gameCommander,
+		clientCtrl: gameCommander,
 		builders:   make(map[string]abstract.CommandBuilder),
 	}
 }

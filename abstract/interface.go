@@ -15,7 +15,7 @@ type BuilderRegister func() (string, func(clientCtrl ClientCtrl) CommandBuilder)
 
 type CommandBuilder interface {
 	Build() Command
-	SetClient(client *Client)
+	SetClientCtrl(ClientCtrl)
 }
 
 type CommandFactory interface {

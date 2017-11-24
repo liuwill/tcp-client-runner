@@ -3,6 +3,7 @@ package runner
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"tcp-client-runner/abstract"
 	"tcp-client-runner/utils"
 	"tcp-client-runner/utils/crypto"
@@ -111,7 +112,13 @@ func (command *ConnectCommand) Execute(data map[string]string) {
 	fmt.Println("Before everything, You have to set remote hostname and server port")
 
 	hostname := io.ReadLine("Enter hostname", "127.0.0.1")
-	port := io.ReadLine("Enter port", "50000")
+
+	defaultPort := os.Getenv("DEFAULT_PORT")
+	if len(defaultPort) <= 0 {
+		defaultPort = "50000"
+	}
+
+	port := io.ReadLine("Enter port", defaultPort)
 	tcpClient := buildTcpClient(hostname, port)
 
 	command.commander.installClient(tcpClient)
