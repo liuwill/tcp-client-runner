@@ -19,7 +19,7 @@ func (command *EchoCommand) Execute(data map[string]string) {
 
 	fmt.Println("# Echo Client Startup! ('exit' or 'quit' to leave)")
 	for {
-		input := io.ReadLine("Echo > ", "")
+		input := io.ReadLine("Echo", "")
 		if len(input) <= 0 {
 			continue
 		} else if input == "exit" || input == "quit" {

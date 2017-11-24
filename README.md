@@ -4,4 +4,8 @@
 
 ```shell
 make run
+make run-demo
+
+# mock echo server
+make mock
 ```

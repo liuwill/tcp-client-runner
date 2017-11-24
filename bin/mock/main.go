@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"tcp-client-runner/utils"
 	"tcp-client-runner/utils/codec"
 	"tcp-client-runner/utils/logger"
 	"time"
@@ -21,14 +22,15 @@ type TcpConnection struct {
 	conn       net.Conn
 	reader     *bufio.Reader
 	mockServer *MockServer
+	message    chan []byte
 }
 
 func (tcpConnection *TcpConnection) Close() {
-
+	tcpConnection.mockServer.outPeerChan <- tcpConnection
 }
 
 func (tcpConnection *TcpConnection) Read(buffer []byte) (int, error) {
-	tcpConnection.conn.SetReadDeadline(time.Now().Add(writeWait))
+	// tcpConnection.conn.SetReadDeadline(time.Now().Add(writeWait))
 	targetBytes, err := codec.Unpack(tcpConnection.reader)
 
 	for i, v := range targetBytes {
@@ -37,25 +39,67 @@ func (tcpConnection *TcpConnection) Read(buffer []byte) (int, error) {
 	return len(targetBytes), err
 }
 
+func (tcpConnection *TcpConnection) SendMessage(message []byte) {
+	tcpConnection.message <- message
+}
+
 func (tcpConnection *TcpConnection) Run() {
 	defer func() {
 		tcpConnection.Close()
 	}()
+
+	for {
+		message := <-tcpConnection.message
+		tcpConnection.conn.SetWriteDeadline(time.Now().Add(writeWait))
+		targetBytes, err := codec.Pack(message)
+		if err != nil {
+			return
+		}
+		tcpConnection.conn.Write(targetBytes)
+	}
 }
 
 type MockServer struct {
-	Peers []*TcpConnection
+	peers       map[string]*TcpConnection
+	inPeerChan  chan *TcpConnection
+	outPeerChan chan *TcpConnection
+}
+
+func NewMockServer() *MockServer {
+	mockServer := &MockServer{
+		peers:       make(map[string]*TcpConnection),
+		inPeerChan:  make(chan *TcpConnection),
+		outPeerChan: make(chan *TcpConnection),
+	}
+
+	go mockServer.Run()
+	return mockServer
+}
+
+func (mockServer *MockServer) Run() {
+	for {
+		select {
+		case inPeer := <-mockServer.inPeerChan:
+			mockServer.peers[inPeer.id] = inPeer
+		case outPeer := <-mockServer.outPeerChan:
+			delete(mockServer.peers, outPeer.id)
+		}
+	}
 }
 
 func (mockServer *MockServer) handleTcpConn(connection net.Conn) {
 	tcpConnection := &TcpConnection{
-		conn:   connection,
-		reader: bufio.NewReader(connection),
+		id:         utils.GenerateObjectId(),
+		conn:       connection,
+		reader:     bufio.NewReader(connection),
+		mockServer: mockServer,
+		message:    make(chan []byte),
 	}
-	mockServer.Peers = append(mockServer.Peers, tcpConnection)
 
 	logger.Success(fmt.Sprintf("Connect From: %s", connection.RemoteAddr().String()))
 	go startTransform(tcpConnection)
+
+	mockServer.inPeerChan <- tcpConnection
 }
 
 func startTransform(tcpConnection *TcpConnection) {
@@ -77,6 +121,7 @@ func startTransform(tcpConnection *TcpConnection) {
 		}
 
 		logger.Info(string(buffer[0:n]))
+		tcpConnection.SendMessage(buffer[0:n])
 		// handler.handlerRequest(connSession, buffer, n)
 	}
 }
@@ -96,9 +141,7 @@ func main() {
 	// 监听并接受来自客户端的连接
 	log.Printf(" TCP Mock Server listen at %s 🚀 \n", defaultPort)
 
-	mockServer := MockServer{
-		Peers: []*TcpConnection{},
-	}
+	mockServer := NewMockServer()
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
