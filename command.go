@@ -6,6 +6,7 @@ import (
 	"tcp-client-runner/abstract"
 	"tcp-client-runner/utils"
 	"tcp-client-runner/utils/crypto"
+	"tcp-client-runner/utils/io"
 	"tcp-client-runner/utils/logger"
 )
 
@@ -21,7 +22,7 @@ func (command *ChatCommand) Execute(data map[string]string) {
 	}
 
 	fmt.Println("Say something to other players, Enjoy!")
-	content := ReadLine("Enter Message", "")
+	content := io.ReadLine("Enter Message", "")
 
 	if len(content) <= 0 {
 		return
@@ -58,15 +59,19 @@ type LoginCommand struct {
 }
 
 func (command *LoginCommand) Execute(data map[string]string) {
+	if !command.tcpClient.IsConnect() {
+		logger.Warning("Please connect server first!")
+		return
+	}
 	if command.tcpClient.IsLogin() {
 		logger.Warning("You have Login now!")
 		return
 	}
 
 	fmt.Println("Please Set Username For Login!")
-	username := ReadLine("Enter Username", "visitor")
-	gameId := ReadLine("Enter Game Id", "")
-	protocol := ReadLine("Enter Protocol", "json")
+	username := io.ReadLine("Enter Username", "visitor")
+	gameId := io.ReadLine("Enter Game Id", "")
+	protocol := io.ReadLine("Enter Protocol", "json")
 	uid := utils.GenerateObjectId()
 
 	if len(gameId) == 0 {
@@ -105,8 +110,8 @@ type ConnectCommand struct {
 func (command *ConnectCommand) Execute(data map[string]string) {
 	fmt.Println("Before everything, You have to set remote hostname and server port")
 
-	hostname := ReadLine("Enter hostname", "127.0.0.1")
-	port := ReadLine("Enter port", "50000")
+	hostname := io.ReadLine("Enter hostname", "127.0.0.1")
+	port := io.ReadLine("Enter port", "50000")
 	tcpClient := buildTcpClient(hostname, port)
 
 	command.commander.installClient(tcpClient)
