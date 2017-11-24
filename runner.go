@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"tcp-client-runner/abstract"
 	"tcp-client-runner/utils/logger"
 )
 
@@ -13,19 +14,19 @@ var input string
 var err error
 
 type CommandRunner struct {
-	builders   map[string]CommandBuilder
-	clientCtrl ClientCtrl
+	builders   map[string]abstract.CommandBuilder
+	clientCtrl abstract.ClientCtrl
 }
 
 func CreateRunner() CommandRunner {
 	gameCommander := StartGameCommander()
 	return CommandRunner{
 		clientCtrl: &gameCommander,
-		builders:   make(map[string]CommandBuilder),
+		builders:   make(map[string]abstract.CommandBuilder),
 	}
 }
 
-func (runner *CommandRunner) InstallCommands(commandBuilders ...func() (string, func(clientCtrl ClientCtrl) CommandBuilder)) {
+func (runner *CommandRunner) InstallCommands(commandBuilders ...abstract.BuilderRegister) {
 	for _, v := range commandBuilders {
 		entrance, commandBuilder := v()
 		runner.builders[entrance] = commandBuilder(runner.clientCtrl)
@@ -56,7 +57,7 @@ func (runner *CommandRunner) Bootstrap() {
 		}
 		// fmt.Printf(input)
 
-		var command Command
+		var command abstract.Command
 		commandBuilder, ok := runner.builders[cmdStr]
 		if ok {
 			command = commandBuilder.Build()

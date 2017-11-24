@@ -3,6 +3,7 @@ package runner
 import (
 	"encoding/json"
 	"fmt"
+	"tcp-client-runner/abstract"
 	"tcp-client-runner/utils"
 	"tcp-client-runner/utils/crypto"
 	"tcp-client-runner/utils/logger"
@@ -10,7 +11,7 @@ import (
 
 // Chat Command For send chat message
 type ChatCommand struct {
-	tcpClient *TcpClient
+	tcpClient abstract.Client
 }
 
 func (command *ChatCommand) Execute(data map[string]string) {
@@ -53,7 +54,7 @@ func (command *GeneralCommand) Fields() []string {
 
 // Login Command For user login
 type LoginCommand struct {
-	tcpClient *TcpClient
+	tcpClient abstract.Client
 }
 
 func (command *LoginCommand) Execute(data map[string]string) {
@@ -83,7 +84,7 @@ func (command *LoginCommand) Execute(data map[string]string) {
 			"gameId":   gameId,
 			"username": username,
 			"protocol": protocol,
-			"uid":      command.tcpClient.uid,
+			"uid":      command.tcpClient.GetUid(),
 			"token":    "",
 		},
 	})

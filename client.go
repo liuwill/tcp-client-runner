@@ -49,6 +49,19 @@ func (tcpClient *TcpClient) SetProtocol(protocol string) {
 func (tcpClient *TcpClient) SetTempProtocol(protocol string) {
 	tcpClient.tempProtocol = protocol
 }
+func (tcpClient *TcpClient) GetUid() string {
+	return tcpClient.uid
+}
+func (tcpClient *TcpClient) GetUsername() string {
+	return tcpClient.username
+}
+func (tcpClient *TcpClient) GetProtocol() string {
+	return tcpClient.protocol
+}
+func (tcpClient *TcpClient) GetTempProtocol() string {
+	return tcpClient.tempProtocol
+}
+
 func (tcpClient *TcpClient) Connect() {
 	if tcpClient.connectStatus {
 		return

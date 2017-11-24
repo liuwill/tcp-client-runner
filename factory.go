@@ -3,11 +3,12 @@ package runner
 import (
 	"fmt"
 	"strings"
+	"tcp-client-runner/abstract"
 	"tcp-client-runner/utils/logger"
 )
 
 type GameCommander struct {
-	tcpClient      *TcpClient
+	tcpClient      abstract.Client
 	enableCommands []string
 	configStatus   bool
 }
@@ -21,11 +22,11 @@ func StartGameCommander() GameCommander {
 	}
 }
 
-func (factory *GameCommander) GetClient() *TcpClient {
+func (factory *GameCommander) GetClient() abstract.Client {
 	return factory.tcpClient
 }
 
-func (factory *GameCommander) CreateCommand(input string) Command {
+func (factory *GameCommander) CreateCommand(input string) abstract.Command {
 	if input == "help" {
 		return factory.CreateHelpCommand()
 	}
@@ -49,28 +50,28 @@ func (factory *GameCommander) CreateCommand(input string) Command {
 	return factory.CreateGeneralCommand()
 }
 
-func (factory *GameCommander) CreateChatCommand() Command {
+func (factory *GameCommander) CreateChatCommand() abstract.Command {
 	return &ChatCommand{
 		tcpClient: factory.tcpClient,
 	}
 }
-func (factory *GameCommander) CreateGameCommand() Command {
+func (factory *GameCommander) CreateGameCommand() abstract.Command {
 	return nil
 }
-func (factory *GameCommander) CreateLoginCommand() Command {
+func (factory *GameCommander) CreateLoginCommand() abstract.Command {
 	return &LoginCommand{
 		tcpClient: factory.tcpClient,
 	}
 }
-func (factory *GameCommander) CreateConnectCommand() Command {
+func (factory *GameCommander) CreateConnectCommand() abstract.Command {
 	return &ConnectCommand{
 		commander: factory,
 	}
 }
-func (factory *GameCommander) CreateHelpCommand() Command {
+func (factory *GameCommander) CreateHelpCommand() abstract.Command {
 	return &HelpCommand{}
 }
-func (factory *GameCommander) CreateGeneralCommand() Command {
+func (factory *GameCommander) CreateGeneralCommand() abstract.Command {
 	return &GeneralCommand{}
 }
 func (factory *GameCommander) installClient(tcpClient *TcpClient) {

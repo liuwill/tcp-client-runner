@@ -2,10 +2,11 @@ package runner
 
 import (
 	"fmt"
+	"tcp-client-runner/abstract"
 )
 
 type CreateCommand struct {
-	tcpClient *TcpClient
+	tcpClient *abstract.Client
 }
 
 func (command *CreateCommand) Execute(data map[string]string) {
@@ -17,22 +18,22 @@ func (command *CreateCommand) Fields() []string {
 }
 
 type CreateCommandBuilder struct {
-	client *TcpClient
+	client *abstract.Client
 }
 
-func (builder *CreateCommandBuilder) Build() Command {
+func (builder *CreateCommandBuilder) Build() abstract.Command {
 	return &CreateCommand{
 		tcpClient: builder.client,
 	}
 }
 
-func (builder *CreateCommandBuilder) SetClient(client *TcpClient) {
+func (builder *CreateCommandBuilder) SetClient(client *abstract.Client) {
 	builder.client = client
 }
 
 var (
-	CreateCommandBuilderRegister = func() (string, func(clientCtrl ClientCtrl) CommandBuilder) {
-		Module := func(clientCtrl ClientCtrl) CommandBuilder {
+	Register = func() (string, func(clientCtrl abstract.ClientCtrl) abstract.CommandBuilder) {
+		Module := func(clientCtrl abstract.ClientCtrl) abstract.CommandBuilder {
 			newBuilder := new(CreateCommandBuilder)
 			return newBuilder
 		}

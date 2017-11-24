@@ -2,13 +2,14 @@ package runner
 
 import (
 	"strings"
+	"tcp-client-runner/abstract"
 )
 
 type Invoker struct {
-	command Command
+	command abstract.Command
 }
 
-func (invoker *Invoker) SetCommand(command Command) {
+func (invoker *Invoker) SetCommand(command abstract.Command) {
 	invoker.command = command
 }
 
@@ -16,7 +17,7 @@ func (invoker *Invoker) Action(input string) {
 	invokerData := invoker.Parse(input, invoker.command)
 	invoker.command.Execute(invokerData)
 }
-func (invoker *Invoker) Parse(input string, command Command) map[string]string {
+func (invoker *Invoker) Parse(input string, command abstract.Command) map[string]string {
 	input = strings.Replace(input, "  ", " ", -1)
 	inputPiece := strings.Split(input, " ")
 	result := make(map[string]string)

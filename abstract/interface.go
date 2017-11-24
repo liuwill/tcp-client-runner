@@ -1,4 +1,4 @@
-package runner
+package abstract
 
 type Command interface {
 	Execute(data map[string]string)
@@ -7,13 +7,15 @@ type Command interface {
 }
 
 type ClientCtrl interface {
-	GetClient() *TcpClient
+	GetClient() Client
 	CreateCommand(string) Command
 }
 
+type BuilderRegister func() (string, func(clientCtrl ClientCtrl) CommandBuilder)
+
 type CommandBuilder interface {
 	Build() Command
-	SetClient(client *TcpClient)
+	SetClient(client *Client)
 }
 
 type CommandFactory interface {
