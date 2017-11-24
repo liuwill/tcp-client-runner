@@ -21,6 +21,10 @@ func StartGameCommander() GameCommander {
 	}
 }
 
+func (factory *GameCommander) GetClient() *TcpClient {
+	return factory.tcpClient
+}
+
 func (factory *GameCommander) CreateCommand(input string) Command {
 	if input == "help" {
 		return factory.CreateHelpCommand()

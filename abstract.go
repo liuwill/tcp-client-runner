@@ -6,6 +6,16 @@ type Command interface {
 	Fields() []string
 }
 
+type ClientCtrl interface {
+	GetClient() *TcpClient
+	CreateCommand(string) Command
+}
+
+type CommandBuilder interface {
+	Build() Command
+	SetClient(client *TcpClient)
+}
+
 type CommandFactory interface {
 	CreateLoginCommand() Command
 	CreateChatCommand() Command

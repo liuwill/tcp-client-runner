@@ -5,73 +5,71 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"tcp-client-runner/utils/logger"
 )
 
-func ReadWord(tip string, def string) string {
-	if len(def) > 0 {
-		tip = fmt.Sprintf("%s (%s): ", tip, def)
-	}
+var inputReader *bufio.Reader
+var input string
+var err error
 
-	var input string
-	fmt.Print(tip)
-	fmt.Scanln(&input)
-	if len(input) == 0 {
-		return def
-	}
-	return strings.TrimSpace(input)
+type CommandRunner struct {
+	builders   map[string]CommandBuilder
+	clientCtrl ClientCtrl
 }
 
-func ReadLine(tip string, def string) string {
-	if len(def) > 0 {
-		tip = fmt.Sprintf("%s (%s): ", tip, def)
-	} else {
-		tip = fmt.Sprintf("%s : ", tip)
+func CreateRunner() CommandRunner {
+	gameCommander := StartGameCommander()
+	return CommandRunner{
+		clientCtrl: &gameCommander,
+		builders:   make(map[string]CommandBuilder),
 	}
+}
 
-	var input string
-	fmt.Print(tip)
-	// fmt.Scanln(&input)
+func (runner *CommandRunner) InstallCommands(commandBuilders ...func() (string, func(clientCtrl ClientCtrl) CommandBuilder)) {
+	for _, v := range commandBuilders {
+		entrance, commandBuilder := v()
+		runner.builders[entrance] = commandBuilder(runner.clientCtrl)
+	}
+}
+
+func (runner *CommandRunner) Bootstrap() {
+	fmt.Println("Welcome TCP Client (Enter '.exit' to Quit)🍺")
 
 	inputReader := bufio.NewReader(os.Stdin)
-	input, err := inputReader.ReadString('\n')
-	if err != nil {
-		return def
-	}
+	defer func() {
+		logger.Info("Exit! Good bye")
+	}()
 
-	input = strings.TrimSpace(input)
-	if len(input) == 0 {
-		return def
-	}
-	return input
-}
-
-type Invoker struct {
-	command Command
-}
-
-func (invoker *Invoker) SetCommand(command Command) {
-	invoker.command = command
-}
-
-func (invoker *Invoker) Action(input string) {
-	invokerData := invoker.Parse(input, invoker.command)
-	invoker.command.Execute(invokerData)
-}
-func (invoker *Invoker) Parse(input string, command Command) map[string]string {
-	input = strings.Replace(input, "  ", " ", -1)
-	inputPiece := strings.Split(input, " ")
-	result := make(map[string]string)
-
-	for index, field := range command.Fields() {
-		if index < len(inputPiece) && len(inputPiece[index]) > 0 {
-			result[field] = inputPiece[index]
+	for {
+		fmt.Print("> ")
+		input, err := inputReader.ReadString('\n')
+		if err != nil {
+			logger.Error("read error")
 		}
-	}
+		cmdStr := strings.TrimSpace(input)
 
-	if len(command.Fields()) == 0 {
-		result["content"] = strings.Join(inputPiece[1:], " ")
-		return result
-	}
+		if cmdStr == ".exit" {
+			return
+		} else if len(cmdStr) == 0 {
+			fmt.Println("Enter 'help' for more info!")
+			continue
+		}
+		// fmt.Printf(input)
 
-	return result
+		var command Command
+		commandBuilder, ok := runner.builders[cmdStr]
+		if ok {
+			command = commandBuilder.Build()
+		} else {
+			command = runner.clientCtrl.CreateCommand(cmdStr)
+			if command == nil {
+				logger.Error("command not found")
+				continue
+			}
+		}
+
+		invoker := Invoker{}
+		invoker.SetCommand(command)
+		invoker.Action(cmdStr)
+	}
 }
